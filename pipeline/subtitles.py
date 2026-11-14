@@ -100,10 +100,11 @@ def build_ass(tl: list[TScene], cfg: dict, article: dict, palette: dict) -> str:
         if sc.kind == "outro":
             _outro_card(ev, t, article, st, palette)
             continue
-        # label pill (top)
-        ev(2, a + 0.15, b - 0.05, "Pill",
-           rf"{{\an8\pos({W // 2},{st['label_y']})\fad(150,120)\fscx70\fscy70\t(0,200,\fscx108\fscy108)"
-           rf"\t(200,320,\fscx100\fscy100)}}{esc(sc.label.upper() if st.get('label_upper', True) else sc.label)}")
+        # label pill (top) - in still/infographic mode the label is drawn as big text by pipeline/infographic.py
+        if st.get("label_pill", True):
+            ev(2, a + 0.15, b - 0.05, "Pill",
+               rf"{{\an8\pos({W // 2},{st['label_y']})\fad(150,120)\fscx70\fscy70\t(0,200,\fscx108\fscy108)"
+               rf"\t(200,320,\fscx100\fscy100)}}{esc(sc.label.upper() if st.get('label_upper', True) else sc.label)}")
         # persistent source badge
         ev(2, a + 0.35, b - 0.05, "Src",
            rf"{{\an8\pos({W // 2},{st['label_y'] + st['label_size'] + 62})\fad(200,100)}}{src_line}")

@@ -61,8 +61,19 @@ python -m unittest discover -s tests -v
 
 Frame di‑upscale ke 1080×1920 dan di‑interpolasi ke 30 fps (`interpolation: mci`). Jika ingin gerakan lebih halus: nyalakan `motion_blur` (+~70% waktu) atau pakai profil `high`.
 
+## Mode visual (`render3d.mode` di config.yaml)
+- **`still` (default):** satu ilustrasi 3D (Blender, 1 gambar per scene) + animasi Ken-Burns + **teks besar / angka berhitung naik / bar persen** (Pillow). Angka diambil hanya dari narasi scene yang sudah divalidasi terhadap fakta. Scene dibuat pendek (6-8 scene, ~5-8 detik) agar visual sering berganti. Ukuran/sampel still per profil ada di `render3d.stills`.
+- **`video`:** animasi 3D penuh per frame (lambat, sekitar 1 jam di runner; lihat tabel profil di bawah).
+- Terukur di sandbox 1 core, Blender 4.0 tanpa denoiser: 360x640 @ 32 sampel = ~35 detik per still. Waktu di runner 4-core dengan build resmi 4.2 **belum terukur**; cek baris `render N/M` di log dry run.
+
+## Mode Indonesia + analis (`selection.prefer_indonesia`, `script.analysis`)
+- **Seleksi:** kandidat artikel diberi skor relevansi Indonesia (feed `region: id`, sebutan eksplisit Indonesia/ASEAN, atau topik berdampak lokal seperti nikel, pusat data, kabel laut, fintech). Yang skornya tinggi dicoba lebih dulu; editor LLM memilih yang paling konkret.
+- **Scene ANALISIS:** scene tepat sebelum penutup adalah *pendapat*, bukan fakta. Kode memaksa: diawali kata "Analisis", menyebut "Indonesia", memakai bahasa hati-hati (mungkin/berpotensi/kemungkinan), tanpa angka, tanpa nama baru di luar fakta terverifikasi, tanpa kata pasti/dijamin. Di layar ditandai pil "ANALISIS KAMI"; deskripsi memuat catatan bahwa bagian itu perspektif kami (dibantu AI).
+- Kata "terbukti / pertama di dunia / terbaik / revolusioner" kini diblokir di seluruh naskah kecuali tertulis di fakta.
+- **Batas jujur:** validator tidak bisa menilai apakah penalaran analisisnya *bagus*, hanya bahwa ia tidak memuat angka/nama baru dan berbahasa hati-hati. Baca `script.json` secara berkala. URL feed Indonesia di `config.yaml` belum terverifikasi (feed yang gagal dilewati dengan peringatan di log).
+
 ## Status pengujian (jujur)
-Sudah diuji di sandbox: render Blender semua 10 prop + maskot (Blender 4.0), pembuatan caption ASS, perakitan ffmpeg (xfade, audio, whoosh, caption karaoke), validator fakta/naskah, penyelarasan kata TTS (unit test). **Belum bisa diuji di sana** (tanpa internet bebas): panggilan Gemini, ambil RSS/artikel, edge‑tts, upload YouTube, Blender 4.2 + denoiser OIDN (build resmi), dan waktu render di runner GitHub. Jalankan `dry_run` dulu; bila sebuah feed gagal, ia dilewati dengan peringatan di log (ganti URL di `config.yaml`).
+Sudah diuji di sandbox: render Blender semua 10 prop + maskot (Blender 4.0), mode still end-to-end (Blender 4.0 + Pillow + ffmpeg, video 1080x1920 H.264+AAC), pembuatan caption ASS, perakitan ffmpeg (xfade, audio, whoosh, caption karaoke), validator fakta/naskah, penyelarasan kata TTS (unit test). **Belum bisa diuji di sana** (tanpa internet bebas): panggilan Gemini, ambil RSS/artikel, edge‑tts, upload YouTube, Blender 4.2 + denoiser OIDN (build resmi), dan waktu render di runner GitHub. Jalankan `dry_run` dulu; bila sebuah feed gagal, ia dilewati dengan peringatan di log (ganti URL di `config.yaml`).
 
 ## Hal yang perlu kamu putuskan/awasi
 - **Kebijakan YouTube "inauthentic/mass‑produced content":** variasikan topik, jangan menaikkan frekuensi terlalu agresif, dan beri nilai tambah (sudut pandang, konteks). Narasi AI + suara sintetis diungkap di deskripsi; atur `contains_synthetic_media` di `config.yaml` bila perlu.

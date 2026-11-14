@@ -6,6 +6,7 @@ articles we could fetch and extract ourselves.
 from __future__ import annotations
 
 import calendar
+import re
 import time
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
@@ -30,6 +31,7 @@ class Candidate:
     tier: int
     published_ts: float
     summary: str = ""
+    idn_score: int = 0     # 0-6, how clearly the item concerns Indonesia (see indonesia_score)
 
     @property
     def age_days(self) -> float:
@@ -55,6 +57,27 @@ def _entry_ts(e) -> float:
     return 0.0
 
 
+IDN_STRONG = re.compile(
+    r"\b(indonesia\w*|jakarta|nusantara|asean|asia tenggara|southeast asia|komdigi|kominfo|brin|ojk|bank indonesia|"
+    r"telkom\w*|gojek|goto|tokopedia|bukalapak|danantara|ikn)\b", re.I)
+IDN_TOPIC = re.compile(
+    r"\b(nikel|nickel|data ?cent(?:er|re)s?|pusat data|kabel laut|submarine cable|undersea cable|satelit|satellite|"
+    r"fintech|qris|e-?commerce|kendaraan listrik|electric vehicles?|baterai|batter(?:y|ies)|semikonduktor|"
+    r"semiconductors?|siber|cyber\w*|kecerdasan buatan|energi terbarukan|renewable)\b", re.I)
+
+
+def indonesia_score(title: str, summary: str = "", region: str = "") -> int:
+    """Cheap, transparent relevance heuristic: an Indonesian feed (+3), an explicit Indonesian/ASEAN mention (+3),
+    or a topic with obvious local impact such as nickel, data centers, subsea cables, fintech (+1). Max 6."""
+    text = f"{title} {summary}"
+    score = 3 if region == "id" else 0
+    if IDN_STRONG.search(text):
+        score += 3
+    if IDN_TOPIC.search(text):
+        score += 1
+    return min(score, 6)
+
+
 def fetch_candidates(cfg: dict, history: list[dict] | None = None) -> list[Candidate]:
     sel = cfg["selection"]
     history = state.load() if history is None else history
@@ -74,8 +97,10 @@ def fetch_candidates(cfg: dict, history: list[dict] | None = None) -> list[Candi
             title = (e.get("title") or "").strip()
             if not link or not title or not ts:
                 continue
+            summary = (e.get("summary") or "")[:500]
             c = Candidate(title=title, url=link, publisher=feed["name"], tier=int(feed.get("tier", 2)),
-                          published_ts=ts, summary=(e.get("summary") or "")[:500])
+                          published_ts=ts, summary=summary,
+                          idn_score=indonesia_score(title, summary, feed.get("region", "")))
             if c.age_days > sel["max_age_days"] or c.age_days < -0.2:
                 continue
             if state.is_seen(c.url, c.title, history):
@@ -83,8 +108,11 @@ def fetch_candidates(cfg: dict, history: list[dict] | None = None) -> list[Candi
             out.append(c)
             n += 1
         log.info("feed %-24s -> %d fresh candidates", feed["name"], n)
-    # best tier first, then newest
-    out.sort(key=lambda c: (c.tier, -c.published_ts))
+    # Indonesia-relevant first (when enabled), then best tier, then newest
+    if sel.get("prefer_indonesia"):
+        out.sort(key=lambda c: (c.idn_score < 3, c.tier, -c.published_ts))
+    else:
+        out.sort(key=lambda c: (c.tier, -c.published_ts))
     # de-duplicate near-identical titles across feeds
     uniq, seen = [], set()
     for c in out:

@@ -50,13 +50,13 @@ class ScriptTests(unittest.TestCase):
         self.assertTrue(any("99" in e for e in errs), errs)
 
     def test_valid_script_passes(self):
-        w = lambda n, extra="": (extra + " " + " ".join(["kata"] * n)).strip()
-        sc = [self.scene(w(10), "chip"), self.scene(w(20, "48"), "battery"), self.scene(w(20, "3"), "gear", (2,)),
-              self.scene(w(20), "atom", (3,)), self.scene(w(14), "globe", ())]
-        sc[1].narration = "Chip memakai energi 48 persen lebih sedikit " + " ".join(["kata"] * 14)
-        sc[2].narration = "Dibuat pada 3 nanometer " + " ".join(["kata"] * 16)
-        sc[3].narration = "Diuji pada 1200 gambar " + " ".join(["kata"] * 16)
-        sc[4].narration = " ".join(["kata"] * 14)
+        w = lambda n: " ".join(["kata"] * n)
+        sc = [self.scene(w(12), "chip"),
+              self.scene("Chip memakai energi 48 persen lebih sedikit " + w(10), "battery"),
+              self.scene("Dibuat pada 3 nanometer " + w(10), "gear", (2,)),
+              self.scene("Diuji pada 1200 gambar " + w(10), "atom", (3,)),
+              self.scene("Analisis kami: Indonesia berpotensi menikmati manfaatnya jika industri lokal siap beradaptasi dengan teknologi chip hemat daya ini", "bulb", (1,)),
+              self.scene(w(12), "globe", ())]
         errs = validate(ScriptOut(title="Judul", summary="s", tags=["a"], scenes=sc), self.facts, self.cfg)
         self.assertEqual(errs, [])
 

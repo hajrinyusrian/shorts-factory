@@ -25,16 +25,20 @@ class PickOut(BaseModel):
     reason: str
 
 
-def pick_candidates_order(llm: LLM, cands: list[Candidate], top_n: int = 12) -> list[Candidate]:
+def pick_candidates_order(llm: LLM, cands: list[Candidate], top_n: int = 12,
+                          prefer_indonesia: bool = False) -> list[Candidate]:
     """Let the model rank the top candidates; we try them in that order (first one that verifies wins)."""
     pool = cands[:top_n]
     if len(pool) <= 1:
         return pool
     listing = "\n".join(
-        f"[{i}] ({c.publisher}, {c.age_days:.1f} hari lalu) {c.title}\n    {c.summary[:240].replace(chr(10), ' ')}"
+        f"[{i}] {'(ID) ' if c.idn_score >= 3 else ''}({c.publisher}, {c.age_days:.1f} hari lalu) {c.title}\n    {c.summary[:240].replace(chr(10), ' ')}"
         for i, c in enumerate(pool))
+    idn_rule = (" Prioritaskan teknologi yang berdampak langsung atau tidak langsung ke Indonesia (industri, pekerja, "
+                "pengguna, regulasi, infrastruktur); tanda (ID) = terkait Indonesia. Jangan memilih hanya karena "
+                "ada tanda (ID) bila artikelnya tidak konkret.") if prefer_indonesia else ""
     prompt = f"""Kamu editor kanal YouTube Shorts "fakta teknologi" untuk penonton umum di Indonesia.
-Pilih SATU artikel terbaik dari daftar. Kriteria (urut prioritas):
+Pilih SATU artikel terbaik dari daftar.{idn_rule} Kriteria (urut prioritas):
 1. Berisi temuan/pencapaian KONKRET yang bisa diverifikasi (angka, hasil riset, peluncuran nyata).
 2. Mengejutkan atau mudah dibayangkan orang awam; cocok divisualkan dengan animasi 3D (chip, roket, baterai, AI, robot, dll).
 3. Bukan opini, rumor, bocoran, promosi produk, berita pendanaan/saham, atau daftar rekomendasi.
@@ -89,6 +93,7 @@ def extract_facts(llm: LLM, art: Article, max_facts: int, max_chars: int = 14000
     body = art.text[:max_chars]
     prompt = f"""Ekstrak {max_facts + 2} fakta paling menarik, konkret, dan berbeda satu sama lain dari artikel ini.
 Utamakan: angka/hasil terukur, siapa yang melakukannya, apa yang baru, mengapa penting (jika tertulis).
+Bila artikel menyebut Indonesia atau Asia Tenggara, sertakan fakta yang menyebutnya (tetap dengan kutipan persis).
 Judul: {art.title}
 Penerbit: {art.publisher}
 

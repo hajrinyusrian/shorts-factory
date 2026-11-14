@@ -19,7 +19,8 @@ from . import state
 from .compose import compose, make_clip
 from .facts import build_fact_sheet, pick_candidates_order
 from .llm import LLM
-from .render3d import render_all
+from .infographic import build_scene_frames
+from .render3d import render_all, render_stills
 from .script_writer import write_script
 from .sources import Article, Candidate, fetch_article, fetch_candidates
 from .subtitles import build_ass
@@ -47,7 +48,7 @@ def pick_article(llm: LLM, cfg: dict, forced_url: str | None):
     cands = fetch_candidates(cfg)
     log.info("%d fresh unseen candidates", len(cands))
     tried = 0
-    for c in pick_candidates_order(llm, cands):
+    for c in pick_candidates_order(llm, cands, prefer_indonesia=bool(sel.get("prefer_indonesia"))):
         if tried >= sel["max_articles_to_try"]:
             break
         tried += 1
@@ -61,7 +62,11 @@ def description_text(script, art: Article, cfg: dict) -> str:
     src = [f"Sumber utama: {art.publisher} - {art.title}", art.url]
     if art.date:
         src.append(f"Tanggal terbit: {art.date}")
-    return (f"{script.summary}\n\n" + "\n".join(src) + f"\n\n{cfg['channel']['description_footer']}\n\n{tags}")
+    note = ""
+    if any(getattr(sc, "kind", "") == "analysis" for sc in script.scenes):
+        note = ("\n\nCatatan: bagian \"Analisis\" adalah perspektif kami (dibantu AI), bukan klaim dari sumber; "
+                "fakta lain dirangkum dari sumber di atas.")
+    return (f"{script.summary}\n\n" + "\n".join(src) + f"{note}\n\n{cfg['channel']['description_footer']}\n\n{tags}")
 
 
 def main():
@@ -109,18 +114,27 @@ def main():
         raise SystemExit("script still too long after retry")
     (work / "script.json").write_text(json.dumps(script.to_dict(), ensure_ascii=False, indent=2), "utf-8")
 
-    # ---- 3) 3D render with Blender -----------------------------------------------------------------
+    # ---- 3) visuals ------------------------------------------------------------------------------------
     prof_name = args.profile or cfg["render3d"]["profile"]
     prof = cfg["render3d"]["profiles"][prof_name]
-    dirs = render_all(tl, work, cfg, prof_name)
-
-    # ---- 4) captions + final video -----------------------------------------------------------------
     v = cfg["video"]
     clips = []
-    for t in tl:
-        clip = work / f"clip_{t.index:02d}.mp4"
-        make_clip(dirs[t.index], clip, prof["fps"], v["width"], v["height"], cfg, prof["width"])
-        clips.append(clip)
+    if cfg["render3d"].get("mode", "still") == "still":
+        # one 3D still per scene + animated big text / infographic (Pillow) -> 30 fps JPEG frames
+        stills = render_stills(tl, work, cfg, prof_name)
+        dirs = build_scene_frames(tl, stills, work, cfg, PALETTE_UI.get(palette_name, "#FFD23F"))
+        for t in tl:
+            clip = work / f"clip_{t.index:02d}.mp4"
+            make_clip(dirs[t.index], clip, v["fps"], v["width"], v["height"], cfg, v["width"], pattern="f_%04d.jpg")
+            clips.append(clip)
+    else:
+        dirs = render_all(tl, work, cfg, prof_name)
+        for t in tl:
+            clip = work / f"clip_{t.index:02d}.mp4"
+            make_clip(dirs[t.index], clip, prof["fps"], v["width"], v["height"], cfg, prof["width"])
+            clips.append(clip)
+
+    # ---- 4) captions + final video -----------------------------------------------------------------
     article_meta = {"publisher": art.publisher, "title": art.title, "date": art.date, "domain": art.meta.get("domain", "")}
     ass = build_ass(tl, cfg, article_meta, {"accent": PALETTE_UI.get(palette_name, "#FFD23F")})
     (work / "subs.ass").write_text(ass, encoding="utf-8")

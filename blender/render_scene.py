@@ -40,6 +40,17 @@ def args_after_dashes():
 
 
 # ---------------------------------------------------------------------------
+def enable_denoiser(c) -> bool:
+    """Turn on OpenImageDenoise if this Blender build supports it. Returns True when enabled."""
+    try:
+        c.denoiser = "OPENIMAGEDENOISE"
+    except (TypeError, ValueError):
+        return False
+    c.use_denoising = True
+    c.denoising_prefilter = "ACCURATE"
+    return True
+
+
 def setup_render(scene, w, h, fps, samples, motion_blur):
     scene.render.engine = "CYCLES"
     c = scene.cycles
@@ -48,13 +59,13 @@ def setup_render(scene, w, h, fps, samples, motion_blur):
     c.use_adaptive_sampling = True
     c.adaptive_threshold = 0.06
     c.adaptive_min_samples = 4
-    has_oidn = bool(getattr(bpy.app.build_options, "openimagedenoise", False))
-    c.use_denoising = has_oidn
-    if has_oidn:
-        c.denoiser = "OPENIMAGEDENOISE"
-        c.denoising_prefilter = "ACCURATE"
+    # bpy.app.build_options has NO "openimagedenoise" flag (checked on Blender 4.0), so the old check was always
+    # False. The reliable test is whether Cycles accepts OPENIMAGEDENOISE as a denoiser value: builds without
+    # OIDN (e.g. Debian/Ubuntu apt) expose an empty enum and raise TypeError.
+    if enable_denoiser(c):
+        print("[blender] denoiser: OpenImageDenoise enabled", flush=True)
     else:
-        # e.g. Debian/Ubuntu apt builds. The pipeline uses the official build in CI.
+        c.use_denoising = False
         print("[blender] WARNING: this Blender build has no OpenImageDenoise -> raw (noisy) samples", flush=True)
     c.max_bounces = 3
     c.diffuse_bounces = 2

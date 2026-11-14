@@ -11,7 +11,8 @@ from .utils import ROOT, log, run
 TRANSITIONS = ["smoothleft", "circleopen", "smoothup", "fade", "smoothright", "radial"]
 
 
-def make_clip(frames_dir: Path, out: Path, render_fps: int, w: int, h: int, cfg: dict, render_w: int) -> None:
+def make_clip(frames_dir: Path, out: Path, render_fps: int, w: int, h: int, cfg: dict, render_w: int,
+              pattern: str = "f_%04d.png") -> None:
     v = cfg["video"]
     interp = cfg["render3d"].get("interpolation", "dup")
     vf = []
@@ -26,7 +27,7 @@ def make_clip(frames_dir: Path, out: Path, render_fps: int, w: int, h: int, cfg:
     if render_w < w:
         vf.append("unsharp=5:5:0.55:5:5:0.0")
     vf.append("format=yuv420p")
-    run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(render_fps), "-i", str(frames_dir / "f_%04d.png"),
+    run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(render_fps), "-i", str(frames_dir / pattern),
          "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "veryfast", "-crf", "14", "-pix_fmt", "yuv420p",
          "-r", str(v["fps"]), str(out)], quiet=True)
 

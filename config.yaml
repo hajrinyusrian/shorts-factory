@@ -21,17 +21,21 @@ selection:
   min_evidence_match: 94     # fuzzy match % of the evidence quote inside the article
   llm_judge: true            # second LLM pass that checks claim <-> evidence
   max_articles_to_try: 6
+  prefer_indonesia: true     # rank Indonesia-relevant candidates first (feed region: id, or explicit mention / local-impact topic)
 
 script:
-  min_scenes: 5
-  max_scenes: 6
-  hook_words: [8, 16]
-  fact_words: [16, 30]
+  min_scenes: 6
+  max_scenes: 8
+  hook_words: [8, 14]
+  fact_words: [10, 20]
   kicker_words: [10, 22]
-  total_words: [85, 135]
+  total_words: [85, 125]
   label_max: 28
   title_max: 80
   max_attempts: 4
+  analysis: true                # scene right before the closing = labelled ANALYSIS (opinion): no numbers, no new names
+  analysis_words: [12, 24]
+  analysis_allowed_names: ["Indonesia", "Asia", "Tenggara", "ASEAN", "Analisis"]
 
 tts:
   voice: "id-ID-ArdiNeural"       # alternatif: id-ID-GadisNeural
@@ -46,6 +50,13 @@ tts:
     USB: "U S B"
     nm: "nanometer"
     TOPS: "tops"
+    RI: "R I"
+    OJK: "O J K"
+    IKN: "I K N"
+    QRIS: "kris"
+    UMKM: "U M K M"
+    EV: "E V"
+    5G: "lima G"
 
 video:
   width: 1080
@@ -61,7 +72,13 @@ video:
   preset: medium
 
 render3d:
-  profile: balanced             # fast | balanced | high
+  mode: still                   # still = one 3D illustration per scene + animated big text/infographic (fast)
+                                # video = full 3D animation per frame (slow, ~1 h)
+  profile: fast                 # fast | balanced | high
+  stills:                       # still-mode render size / samples per profile (time per still = ESTIMATE, not measured)
+    fast:     { width: 540,  height: 960,  samples: 24 }
+    balanced: { width: 720,  height: 1280, samples: 40 }
+    high:     { width: 1080, height: 1920, samples: 64 }
   profiles:                     # estimates on a 4-core GitHub runner, see README
     fast:     { width: 432, height: 768,  samples: 12, fps: 12 }   # ~25 min
     balanced: { width: 540, height: 960,  samples: 14, fps: 12 }   # ~45 min
@@ -72,15 +89,16 @@ render3d:
   camera_moves: ["push", "orbit", "pull"]
 
 subtitles:
+  label_pill: false          # still mode draws the label as big text; set true for the old top pill
   font_bold: "Poppins ExtraBold"
   font_semibold: "Poppins SemiBold"
   caption_size: 80
-  caption_y: 1290
+  caption_y: 1500
   max_line_chars: 17
   label_size: 58
   label_y: 235
   label_upper: true
-  source_size: 36
+  source_size: 44
   card_title_size: 70
   card_body_size: 42
   card_y: 1130
@@ -110,3 +128,12 @@ feeds:
   - { name: "Google Research",          url: "https://research.google/blog/rss/",                                        tier: 2 }
   - { name: "Google DeepMind",          url: "https://deepmind.google/blog/rss.xml",                                     tier: 2 }
   - { name: "The Verge",                url: "https://www.theverge.com/rss/index.xml",                                   tier: 3 }
+  # --- Indonesian / regional sources (region: id). URLs are UNVERIFIED guesses from memory: a feed that fails is
+  # skipped with a warning in the log; fix or delete lines accordingly. ---
+  - { name: "The Conversation Indonesia", url: "https://theconversation.com/id/articles.atom",        tier: 1, region: id }
+  - { name: "ANTARA",                     url: "https://www.antaranews.com/rss/tekno.xml",             tier: 2, region: id }
+  - { name: "detikInet",                  url: "https://rss.detik.com/index.php/inet",                 tier: 2, region: id }
+  - { name: "CNBC Indonesia",             url: "https://www.cnbcindonesia.com/tech/rss",               tier: 2, region: id }
+  - { name: "Tempo",                      url: "https://rss.tempo.co/tekno",                           tier: 2, region: id }
+  - { name: "DailySocial",                url: "https://dailysocial.id/feed",                          tier: 3, region: id }
+  - { name: "Rest of World",              url: "https://restofworld.org/feed/",                        tier: 2 }
