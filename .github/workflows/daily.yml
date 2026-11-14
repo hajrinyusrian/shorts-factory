@@ -1,0 +1,110 @@
+name: daily-short
+
+on:
+  schedule:
+    - cron: "30 8 * * *"        # 08:30 UTC = 15:30 WIB -> video ready & uploaded around 17:00 WIB
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "3D render profile"
+        default: "balanced"
+        type: choice
+        options: [fast, balanced, high]
+      dry_run:
+        description: "Build the video but do not upload"
+        default: false
+        type: boolean
+      url:
+        description: "Optional: force this article URL"
+        required: false
+
+concurrency:
+  group: daily-short
+  cancel-in-progress: false
+
+permissions:
+  contents: write              # to commit data/history.json
+
+env:
+  BLENDER_VERSION: "4.2.3"
+  BLENDER_SERIES: "4.2"
+
+jobs:
+  make-short:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: System packages (ffmpeg + libs Blender needs headless)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libxi6 libxrender1 libxxf86vm1 libxfixes3 libxkbcommon0 libsm6 libgl1 libegl1 libglu1-mesa
+          ffmpeg -hide_banner -filters | grep -E " (ass|xfade|minterpolate) "
+
+      - name: Blender (official build - includes the OpenImageDenoise denoiser)
+        id: blender
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ env.BLENDER_VERSION }}
+      - name: Download Blender
+        if: steps.blender.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/blender
+          curl -fsSL "https://download.blender.org/release/Blender${BLENDER_SERIES}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" \
+            | tar -xJ -C ~/blender --strip-components=1
+      - name: Check Blender
+        run: |
+          echo "BLENDER_BIN=$HOME/blender/blender" >> "$GITHUB_ENV"
+          ~/blender/blender --version | head -2
+          nproc
+
+      - name: Python deps
+        run: pip install -r requirements.txt
+
+      - name: Unit tests (fact verification, script validation, subtitles)
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Generate + render + upload
+        shell: bash
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          IN_PROFILE: ${{ github.event.inputs.profile }}
+          IN_DRY: ${{ github.event.inputs.dry_run }}
+          IN_URL: ${{ github.event.inputs.url }}
+        run: |
+          ARGS=(--profile "${IN_PROFILE:-balanced}")
+          if [ "$IN_DRY" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ -n "$IN_URL" ]; then ARGS+=(--url "$IN_URL"); fi
+          python -m pipeline.main "${ARGS[@]}"
+
+      - name: Keep history (no repeated topics)
+        if: success()
+        run: |
+          git config user.name  "shorts-bot"
+          git config user.email "shorts-bot@users.noreply.github.com"
+          git add data/history.json
+          git diff --cached --quiet || (git commit -m "history: new short" && git push)
+
+      - name: Keep outputs for 3 days (video, script, verified facts, description)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-output
+          path: |
+            out/*/video.mp4
+            out/*/script.json
+            out/*/facts.json
+            out/*/description.txt
+          retention-days: 3
+          if-no-files-found: ignore
