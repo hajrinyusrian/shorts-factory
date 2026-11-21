@@ -100,7 +100,7 @@ def main():
     (work / "facts.json").write_text(json.dumps([f.to_dict() for f in facts], ensure_ascii=False, indent=2), "utf-8")
 
     # ---- 2) script (validated) + voice timeline; shorten if it overruns -------------------------
-    palette_name = random.Random(art.url).choice(PALETTES)
+    palette_name = "blueprint" if cfg["render3d"].get("visual_style") == "documentary_blueprint" else random.Random(art.url).choice(PALETTES)
     script, tl, shorter = None, None, False
     for attempt in range(2):
         script = write_script(llm, facts, art, cfg, shorter=shorter)
@@ -112,6 +112,9 @@ def main():
         shorter = True
     else:
         raise SystemExit("script still too long after retry")
+    min_seconds = int(v.get("min_seconds", 0)) if "v" in locals() else int(cfg["video"].get("min_seconds", 0))
+    if dur < min_seconds:
+        raise SystemExit(f"script duration {dur:.1f}s is below documentary minimum {min_seconds}s; refusing to render a short cut")
     (work / "script.json").write_text(json.dumps(script.to_dict(), ensure_ascii=False, indent=2), "utf-8")
 
     # ---- 3) visuals ------------------------------------------------------------------------------------
