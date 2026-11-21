@@ -12,6 +12,12 @@ PROPS = {
     "shield":  "keamanan siber, privasi, perlindungan",
     "atom":    "fisika, kuantum, material, nanoteknologi, sains dasar",
     "gear":    "robotika, rekayasa, manufaktur, mesin",
+    "money": "uang tunai, bundel uang, penyitaan aset, transaksi keuangan",
+    "gold": "emas batangan, logam mulia, barang bukti, aset",
+    "house": "rumah, lokasi penggeledahan, properti, tempat kejadian",
+    "courthouse": "pengadilan, hukum, persidangan, lembaga peradilan",
+    "document": "dokumen, berkas perkara, bukti tertulis, laporan",
+    "car": "kendaraan, perjalanan, transportasi, aset bergerak",
 }
 PROP_KEYS = list(PROPS)
 EMOTIONS = ["happy", "surprised", "thinking", "excited", "proud"]
