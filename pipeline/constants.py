@@ -15,5 +15,5 @@ PROPS = {
 }
 PROP_KEYS = list(PROPS)
 EMOTIONS = ["happy", "surprised", "thinking", "excited", "proud"]
-PALETTES = ["ocean", "sunset", "mint", "candy", "sky", "dusk"]
+PALETTES = ["ocean", "sunset", "mint", "candy", "sky", "dusk", "blueprint"]
 CAMERA_MOVES = ["push", "orbit", "pull"]
