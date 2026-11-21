@@ -1,0 +1,72 @@
+name: documentary-render
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Render quality (fast is recommended for free-tier testing)"
+        required: true
+        default: fast
+        type: choice
+        options:
+          - fast
+          - balanced
+          - high
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentary-render
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FFmpeg and Blender runtime libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libxi6 libxrender1 libxxf86vm1 libxfixes3 libxkbcommon0 libsm6 libgl1 libegl1 libglu1-mesa
+          ffmpeg -hide_banner -filters | grep -E " (ass|xfade|minterpolate) "
+
+      - name: Download official Blender build
+        run: |
+          mkdir -p "$HOME/blender"
+          curl -fsSL "https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz" | tar -xJ -C "$HOME/blender" --strip-components=1
+          echo "BLENDER_BIN=$HOME/blender/blender" >> "$GITHUB_ENV"
+          "$HOME/blender/blender" --version | head -2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests before rendering
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Generate documentary video (dry run only)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          test -n "$GEMINI_API_KEY" || (echo "Missing repository secret GEMINI_API_KEY. Add a free-tier Gemini API key in Settings > Secrets and variables > Actions." && exit 1)
+          python -m pipeline.main --config config.yaml --dry-run --profile "${{ inputs.profile }}"
+
+      - name: Upload video and editorial evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentary-review
+          path: |
+            out/*/video.mp4
+            out/*/script.json
+            out/*/facts.json
+            out/*/description.txt
+          retention-days: 3
+          if-no-files-found: ignore
