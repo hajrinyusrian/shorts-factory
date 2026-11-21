@@ -54,7 +54,7 @@ class Script:
         return asdict(self)
 
 
-SYSTEM = """Kamu analis teknologi senior sekaligus penulis naskah YouTube Shorts "Fakta Teknologi" untuk penonton Indonesia.
+SYSTEM = """Kamu penulis dokumenter investigasi visual berbahasa Indonesia untuk penonton Indonesia. Video berdurasi 2-3 menit.
 Gaya: tajam tapi hangat. Kalimat pendek, bahasa Indonesia santai tapi baku-secukupnya. Kamu selalu menjawab "lalu kenapa ini penting buat kita di Indonesia?" tanpa lebay dan tanpa mengarang.
 ATURAN KERAS (akurasi lebih penting daripada gaya):
 1. Gunakan HANYA informasi dari daftar FAKTA TERVERIFIKASI. Dilarang menambah fakta, angka, nama, tanggal, atau perbandingan dari luar daftar.
@@ -137,7 +137,7 @@ def build_prompt(facts: list[Fact], art: Article, cfg: dict, feedback: list[str]
     if feedback:
         fb = "\nPERBAIKI MASALAH BERIKUT dari percobaan sebelumnya:\n" + "\n".join(f"- {e}" for e in feedback)
     if shorter:
-        fb += "\n- Naskah sebelumnya terlalu panjang untuk durasi Shorts. Buat LEBIH RINGKAS."
+        fb += "\n- Naskah sebelumnya di luar target durasi dokumenter. Sesuaikan panjangnya tanpa membuang fakta penting."
     aw = sc.get("analysis_words", [12, 24])
     analysis_block = (
         f"- Scene tepat SEBELUM penutup = ANALISIS ({aw[0]}-{aw[1]} kata): sudut pandang analis tentang apa artinya bagi Indonesia "
@@ -145,7 +145,7 @@ def build_prompt(facts: list[Fact], art: Article, cfg: dict, feedback: list[str]
         "menyebut kata \"Indonesia\", memakai bahasa hati-hati (mungkin/bisa jadi/berpotensi/kemungkinan), TANPA angka, "
         "TANPA nama perusahaan/lembaga/tempat baru, dan isi fact_ids dengan fakta yang menjadi dasar penalaranmu.\n"
     ) if sc.get("analysis") else ""
-    return f"""Buat naskah Shorts dari fakta terverifikasi berikut.
+    return f"""Buat naskah dokumenter visual berdurasi 2-3 menit dari fakta terverifikasi berikut.
 Sumber: {art.publisher} - "{art.title}" ({art.date})
 
 FAKTA TERVERIFIKASI:
@@ -157,7 +157,7 @@ STRUKTUR ({sc['min_scenes']}-{sc['max_scenes']} scene):
 {analysis_block}- Scene terakhir = PENUTUP ({sc['kicker_words'][0]}-{sc['kicker_words'][1]} kata): makna/dampak singkat atau pertanyaan untuk penonton. Tidak boleh ada angka baru.
 - Total {sc['total_words'][0]}-{sc['total_words'][1]} kata.
 - Satu fakta boleh dipakai di lebih dari satu scene dengan sudut berbeda (apa isinya, lalu kenapa penting), tanpa menambah fakta baru.
-- Setiap scene tampil sebagai ilustrasi + TEKS BESAR + infografis angka. Kalimat yang memuat angka dari fakta akan ditampilkan sebagai angka besar, jadi taruh angka itu di scene yang tepat.
+- Setiap scene tampil sebagai dokumenter investigasi: ilustrasi 3D isometrik/blueprint + foto/dokumen sumber bila tersedia + TEKS BESAR + infografis angka. Kalimat yang memuat angka dari fakta akan ditampilkan sebagai angka besar, jadi taruh angka itu di scene yang tepat.
 Setiap scene pilih "prop" 3D yang paling cocok (jangan sama dengan scene sebelumnya):
 {_prop_help()}
 "emotion" maskot robot "Bit": happy, surprised, thinking, excited, proud (variasikan, hook biasanya surprised/excited).
