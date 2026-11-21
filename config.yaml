@@ -9,8 +9,7 @@ channel:
     Animasi 3D dibuat otomatis dengan Blender.
 
 llm:
-  # Fallback order. gemini-2.5-* is only served to keys that used it before (Google deprecations page, 2026-10-22),
-  # so a new key may get 404 there; 404/403 models are skipped automatically. Verify free-tier access of 3.x in AI Studio.
+  # Free-tier model fallback order; availability and rate limits can change. No paid model fallback is configured.
   models: ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
 
 selection:
