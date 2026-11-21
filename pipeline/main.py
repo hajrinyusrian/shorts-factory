@@ -112,7 +112,7 @@ def main():
         shorter = True
     else:
         raise SystemExit("script still too long after retry")
-    min_seconds = int(v.get("min_seconds", 0)) if "v" in locals() else int(cfg["video"].get("min_seconds", 0))
+    min_seconds = int(cfg["video"].get("min_seconds", 0))
     if dur < min_seconds:
         raise SystemExit(f"script duration {dur:.1f}s is below documentary minimum {min_seconds}s; refusing to render a short cut")
     (work / "script.json").write_text(json.dumps(script.to_dict(), ensure_ascii=False, indent=2), "utf-8")
