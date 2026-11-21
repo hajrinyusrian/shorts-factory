@@ -1,6 +1,11 @@
 name: documentary-render
 
 on:
+  push:
+    branches:
+      - documentary-hybrid-2-5d
+    paths:
+      - render-request.txt
   workflow_dispatch:
     inputs:
       profile:
@@ -56,7 +61,13 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           test -n "$GEMINI_API_KEY" || (echo "Missing repository secret GEMINI_API_KEY. Add a free-tier Gemini API key in Settings > Secrets and variables > Actions." && exit 1)
-          python -m pipeline.main --config config.yaml --dry-run --profile "${{ inputs.profile }}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            PROFILE="${{ inputs.profile }}"
+          else
+            PROFILE="$(tr -d '[:space:]' < render-request.txt)"
+          fi
+          case "$PROFILE" in fast|balanced|high) ;; *) echo "render-request.txt must contain fast, balanced, or high"; exit 1 ;; esac
+          python -m pipeline.main --config config.yaml --dry-run --profile "$PROFILE"
 
       - name: Upload video and editorial evidence
         if: always()
