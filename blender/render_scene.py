@@ -29,6 +29,7 @@ PALETTES = {
     "candy":  dict(wall_a="#6D28D9", wall_b="#F472B6", accent="#FDE047", accent2="#22D3EE", eye="#9BF6FF"),
     "sky":    dict(wall_a="#173FBF", wall_b="#5FA8FF", accent="#FB923C", accent2="#84E04C", eye="#7CF3FF"),
     "dusk":   dict(wall_a="#1B1850", wall_b="#6C6CF5", accent="#FFB020", accent2="#34D399", eye="#9BE7FF"),
+    "blueprint": dict(wall_a="#071426", wall_b="#10243A", accent="#F5A623", accent2="#39BDE5", eye="#EAF4FF"),
 }
 
 PROP_POS = (0.0, 0.0, 1.55)
@@ -172,6 +173,29 @@ def build_bokeh(tr, pal, rng, count=24):
     return items
 
 
+def build_blueprint_grid():
+    """Subtle isometric-friendly floor grid for the investigative documentary look."""
+    colour = hex_rgba("#29445F")
+    mat = make_material("blueprint_grid", colour, rough=1.0, emission=colour, strength=0.22, bevel=0)
+    for axis in ("x", "y"):
+        for n in range(-12, 13):
+            curve = bpy.data.curves.new(f"grid_{axis}_{n}", "CURVE")
+            curve.dimensions = "3D"
+            curve.bevel_depth = 0.006 if n % 4 else 0.012
+            curve.bevel_resolution = 1
+            spline = curve.splines.new("POLY")
+            if axis == "x":
+                pts = [(-8.0, float(n) * 0.5, 0.018), (8.0, float(n) * 0.5, 0.018)]
+            else:
+                pts = [(float(n) * 0.5, -8.0, 0.018), (float(n) * 0.5, 8.0, 0.018)]
+            spline.points.add(1)
+            for p, co in zip(spline.points, pts):
+                p.co = (*co, 1.0)
+            obj = bpy.data.objects.new(f"grid_{axis}_{n}", curve)
+            bpy.context.collection.objects.link(obj)
+            obj.data.materials.append(mat)
+
+
 def build_lights(pal, key_rot_seed=0):
     def area(name, loc, size, energy, color, target=(0, 0, 1.4)):
         ld = bpy.data.lights.new(name, "AREA")
@@ -227,10 +251,16 @@ def render_scene(cfg):
     build_cyclorama(pal)
     build_lights(pal)
     cam = build_camera(scene, W, H, float(cfg.get("shift_y", -0.1)))
+    blueprint = cfg.get("visual_style") == "documentary_blueprint" or pal is PALETTES["blueprint"]
+    if blueprint:
+        cam.data.type = "ORTHO"
+        cam.data.ortho_scale = 10.5
+        cam.location = (7.0, -9.0, 8.0)
+        build_blueprint_grid()
 
     tr = Tracker()
     tr.track(cam, "location")
-    bokeh = build_bokeh(tr, pal, rng)
+    bokeh = build_bokeh(tr, pal, rng, count=0 if blueprint else 24)
     ms = int(cfg.get("mascot_side", 1))
     side = 1 if ms >= 0 else -1
     prop_pos = (-0.38 * side, 0.0, PROP_POS[2])
@@ -246,7 +276,14 @@ def render_scene(cfg):
     for f in range(1, frames + 1):
         t = (f - 1) / fps
         k = t / max(T, 0.001)
-        if move == "orbit":
+        if blueprint:
+            if move == "orbit":
+                cam.location = (7.0 + 0.28 * math.sin(math.pi * k), -9.0, 8.0)
+            elif move == "pull":
+                cam.location = (7.2, -9.2, 8.15)
+            else:
+                cam.location = (7.0 - 0.18 * smoothstep(k), -9.0 + 0.18 * smoothstep(k), 8.0 - 0.12 * smoothstep(k))
+        elif move == "orbit":
             cx = 0.8 * math.sin(math.pi * (k - 0.5)) * 1.0
             cam.location = (cx, -7.6 + 0.2 * k, 1.9)
         elif move == "pull":
