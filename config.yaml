@@ -2,7 +2,7 @@
 #  Shorts Factory - configuration
 # ============================================================================
 channel:
-  name: "Fakta Teknologi"
+  name: "Dokumenter Visual"
   hashtags: ["#Shorts", "#Teknologi", "#FaktaTeknologi", "#Sains"]
   description_footer: >-
     Narasi dibuat dengan bantuan AI dan suara sintetis; setiap fakta dirangkum dari sumber di atas.
@@ -24,17 +24,17 @@ selection:
   prefer_indonesia: true     # rank Indonesia-relevant candidates first (feed region: id, or explicit mention / local-impact topic)
 
 script:
-  min_scenes: 6
-  max_scenes: 8
-  hook_words: [8, 14]
-  fact_words: [10, 20]
-  kicker_words: [10, 22]
-  total_words: [85, 125]
+  min_scenes: 10
+  max_scenes: 12
+  hook_words: [18, 26]
+  fact_words: [25, 38]
+  kicker_words: [18, 28]
+  total_words: [300, 390]
   label_max: 28
   title_max: 80
-  max_attempts: 4
+  max_attempts: 5
   analysis: true                # scene right before the closing = labelled ANALYSIS (opinion): no numbers, no new names
-  analysis_words: [12, 24]
+  analysis_words: [18, 28]
   analysis_allowed_names: ["Indonesia", "Asia", "Tenggara", "ASEAN", "Analisis"]
 
 tts:
@@ -62,7 +62,8 @@ video:
   width: 1080
   height: 1920
   fps: 30
-  max_seconds: 58               # Shorts hard limit is 60 s (3 min since 2024); keep a safe margin
+  min_seconds: 120              # target documentary runtime: 2-3 minutes
+  max_seconds: 180
   first_scene_lead: 0.15
   scene_lead: 0.22
   scene_tail: 0.30
@@ -72,9 +73,9 @@ video:
   preset: medium
 
 render3d:
-  mode: still                   # still = one 3D illustration per scene + animated big text/infographic (fast)
+  mode: still                   # hybrid 2.5D = one 3D still per scene + animated 2D graphics
                                 # video = full 3D animation per frame (slow, ~1 h)
-  profile: fast                 # fast | balanced | high
+  profile: fast                 # fast | balanced | high; use low-cost still renders
   stills:                       # still-mode render size / samples per profile (time per still = ESTIMATE, not measured)
     fast:     { width: 540,  height: 960,  samples: 24 }
     balanced: { width: 720,  height: 1280, samples: 40 }
@@ -87,6 +88,9 @@ render3d:
   interpolation: mci            # dup | blend | mci  (12 -> 30 fps motion interpolation)  (frame-rate up-conversion to 30 fps)
   shift_y: -0.16
   camera_moves: ["push", "orbit", "pull"]
+  visual_style: "documentary_blueprint"
+  background_grid: true
+  isometric_camera: true
 
 subtitles:
   label_pill: false          # still mode draws the label as big text; set true for the old top pill
