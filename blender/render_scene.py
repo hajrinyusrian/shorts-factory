@@ -255,6 +255,7 @@ def render_scene(cfg):
     if blueprint:
         cam.data.type = "ORTHO"
         cam.data.ortho_scale = 10.5
+        cam.data.dof.use_dof = False
         cam.location = (7.0, -9.0, 8.0)
         build_blueprint_grid()
 
