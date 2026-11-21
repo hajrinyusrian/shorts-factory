@@ -1,0 +1,54 @@
+name: documentary-hybrid-ci
+
+on:
+  push:
+    branches:
+      - documentary-hybrid-2-5d
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentary-hybrid-ci
+  cancel-in-progress: true
+
+jobs:
+  test-and-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system renderer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender ffmpeg
+          blender --version | head -2
+          ffmpeg -version | head -1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit and configuration tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Run offline hybrid 2.5D render test
+        env:
+          BLENDER_BIN: /usr/bin/blender
+        run: python tests/e2e_documentary_fake.py /tmp/documentary-e2e
+
+      - name: Upload rendered test video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentary-hybrid-e2e
+          path: /tmp/documentary-e2e/documentary-test.mp4
+          if-no-files-found: ignore
+          retention-days: 3
