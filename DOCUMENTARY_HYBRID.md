@@ -31,9 +31,9 @@ This branch is an isolated implementation track for a 2–3 minute Indonesian vi
 
 ## Free-tier requirements and limits
 
-- Add `GEMINI_API_KEY` as a repository Actions secret. Use a model/key that is currently available on Google's free tier; free-tier quotas and model availability can change.
+- Add `GEMINI_API_KEY` as a repository Actions secret from Google AI Studio. The configured model fallback list is limited to models whose official pricing page currently lists a free tier. Keep the Google project on the free tier and do not enable paid billing; requests can still stop when free quotas are reached. Free-tier availability and quotas can change.
 - Edge TTS is used for narration and does not require a paid API subscription, but it does require network access during the job.
-- GitHub Actions runners are used for Blender and FFmpeg rendering. Public repository standard-runner usage is generally eligible for free use under GitHub's current policy, but hosted runner availability, time limits, storage, and artifact retention remain platform-controlled. This design does not promise unlimited compute.
+- GitHub Actions standard hosted runners are free for public repositories. Artifacts and caches still have storage limits, and jobs have runtime limits. This design uses standard Ubuntu runners only; it does not use billable larger runners. This does not remove platform throttling or availability limits.
 - No Cloudflare, paid video-generation API, paid TTS API, YouTube OAuth, or YouTube upload permission is required for the review render.
 - The first full render can fail if a free API quota is exhausted, a feed is unavailable, or a runner hits its time limit. Such a run must be reported as failed, not displayed as active work.
 
