@@ -11,7 +11,7 @@ channel:
 llm:
   # Fallback order. gemini-2.5-* is only served to keys that used it before (Google deprecations page, 2026-10-22),
   # so a new key may get 404 there; 404/403 models are skipped automatically. Verify free-tier access of 3.x in AI Studio.
-  models: ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+  models: ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
 
 selection:
   max_age_days: 6            # only articles newer than this
