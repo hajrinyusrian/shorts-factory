@@ -64,7 +64,7 @@ meta = {"publisher": "Test Source", "title": "Offline documentary renderer test"
 (out / "subs.ass").write_text(build_ass(timeline, cfg, meta, {"accent": "#F5A623"}), encoding="utf-8")
 final = out / "documentary-test.mp4"
 compose(timeline, clips, out / "subs.ass", out, final, cfg)
-probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=width,height,r_frame_rate,codec_name",
+probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate,codec_name",
                         "-of", "json", str(final)], check=True, capture_output=True, text=True)
 import json
 streams = json.loads(probe.stdout)["streams"]
