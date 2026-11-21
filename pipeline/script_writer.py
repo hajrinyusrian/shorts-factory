@@ -21,7 +21,7 @@ from .utils import log, number_tokens
 class SceneOut(BaseModel):
     narration: str = Field(description="narasi Bahasa Indonesia untuk scene ini")
     label: str = Field(description="label singkat di layar, maks 28 karakter")
-    prop: Literal["chip", "planet", "rocket", "battery", "neural", "globe", "bulb", "shield", "atom", "gear"]
+    prop: Literal["chip", "planet", "rocket", "battery", "neural", "globe", "bulb", "shield", "atom", "gear", "money", "gold", "house", "courthouse", "document", "car"]
     emotion: Literal["happy", "surprised", "thinking", "excited", "proud"]
     fact_ids: list[int] = Field(description="id fakta yang dipakai di scene ini")
 
