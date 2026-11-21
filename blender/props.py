@@ -11,7 +11,7 @@ from common import (empty, sphere, rbox, cyl, cone, torus, capsule, polygon_pris
                     make_material, make_procedural_material, hex_rgba, Tracker, ease_out_back,
                     smoothstep, pulse)
 
-PROP_KEYS = ["chip", "planet", "rocket", "battery", "neural", "globe", "bulb", "shield", "atom", "gear"]
+PROP_KEYS = ["chip", "planet", "rocket", "battery", "neural", "globe", "bulb", "shield", "atom", "gear", "money", "gold", "house", "courthouse", "document", "car"]
 
 
 class Prop:
