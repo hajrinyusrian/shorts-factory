@@ -31,8 +31,12 @@ cfg["audio"]["whoosh"] = False
 cfg["video"]["transition"] = 0.2
 
 rows = [
-    ("Kasus ini bermula dari sebuah temuan yang kemudian menjadi perhatian publik.", "Awal Peristiwa", "chip", "surprised", "hook"),
-    ("Dokumen dan keterangan resmi menjadi dasar untuk menyusun kronologi secara hati-hati.", "Kronologi", "shield", "thinking", "fact"),
+    ("Penyidik menemukan bundel uang tunai dalam rangkaian penggeledahan.", "Uang Tunai", "money", "surprised", "hook"),
+    ("Sejumlah emas batangan juga menjadi bagian dari barang yang disita.", "Emas Batangan", "gold", "thinking", "fact"),
+    ("Lokasi rumah menjadi bagian penting untuk memahami urutan peristiwa.", "Lokasi Rumah", "house", "thinking", "fact"),
+    ("Proses hukum dan persidangan menjadi tahap berikutnya dalam kronologi.", "Proses Hukum", "courthouse", "proud", "fact"),
+    ("Dokumen perkara membantu menjelaskan dasar pemeriksaan dan penyelidikan.", "Dokumen Perkara", "document", "thinking", "fact"),
+    ("Kendaraan dan aset lain dapat divisualisasikan sebagai bagian dari cerita.", "Aset Kendaraan", "car", "happy", "fact"),
     ("Sumber: dokumentasi berita. Perkembangan berikutnya masih perlu dipantau.", "Sumber", "globe", "proud", "outro"),
 ]
 timeline = []
