@@ -23,9 +23,9 @@ This branch is an isolated implementation track for a 2–3 minute Indonesian vi
 ## Run from an iPhone browser
 
 1. Open the repository and select branch `documentary-hybrid-2-5d`.
-2. Open **Actions**.
-3. Select **documentary-render**.
-4. Tap **Run workflow**, choose `fast`, and start the run.
+2. Add a new file named `render-request.txt` in the repository root using the GitHub browser editor.
+3. Put exactly one word in it: `fast` (or `balanced` / `high`), then commit the file to this branch. A push-triggered workflow starts automatically. To render again, edit the file and change its contents before committing.
+4. Alternatively, once this workflow is available on the default branch, use **Actions → documentary-render → Run workflow**.
 5. Open the completed run and download the `documentary-review` artifact.
 6. Review `video.mp4`, `script.json`, and `facts.json` before any manual publishing decision.
 
@@ -39,7 +39,7 @@ This branch is an isolated implementation track for a 2–3 minute Indonesian vi
 
 ## Current validation status
 
-The source changes and test workflows have been committed to this branch. A green GitHub Actions run and a successfully downloaded, inspected review video are still required before calling the implementation production-ready. The connector used for this work can write repository files but does not expose a direct workflow-dispatch or run-status action, so that final execution result must be checked in the GitHub Actions page.
+The source changes and test workflows have been committed to this branch. A green GitHub Actions run and a successfully downloaded, inspected review video are still required before calling the implementation production-ready. The connector used for this work can write repository files but does not expose a direct workflow-dispatch or run-status action, so the green CI result and final rendered artifact must be checked in the GitHub Actions page.
 
 ## Editorial and rights safeguards
 
