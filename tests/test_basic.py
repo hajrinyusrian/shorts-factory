@@ -51,12 +51,16 @@ class ScriptTests(unittest.TestCase):
 
     def test_valid_script_passes(self):
         w = lambda n: " ".join(["kata"] * n)
-        sc = [self.scene(w(12), "chip"),
-              self.scene("Chip memakai energi 48 persen lebih sedikit " + w(10), "battery"),
-              self.scene("Dibuat pada 3 nanometer " + w(10), "gear", (2,)),
-              self.scene("Diuji pada 1200 gambar " + w(10), "atom", (3,)),
-              self.scene("Analisis kami: Indonesia berpotensi menikmati manfaatnya jika industri lokal siap beradaptasi dengan teknologi chip hemat daya ini", "bulb", (1,)),
-              self.scene(w(12), "globe", ())]
+        sc = [self.scene(w(20), "chip"),
+              self.scene("Chip memakai energi 48 persen lebih sedikit " + w(29), "battery"),
+              self.scene("Dibuat pada 3 nanometer " + w(29), "gear", (2,)),
+              self.scene("Diuji pada 1200 gambar " + w(29), "atom", (3,)),
+              self.scene(w(34), "shield", (1,)),
+              self.scene(w(34), "planet", (2,)),
+              self.scene(w(34), "rocket", (3,)),
+              self.scene(w(34), "neural", (1,)),
+              self.scene("Analisis kami: Indonesia mungkin memperoleh manfaat jika kesiapan industri, pekerja, dan pengguna berkembang seiring perubahan teknologi yang sedang berlangsung", "bulb", (1,)),
+              self.scene(w(22), "globe", ())]
         errs = validate(ScriptOut(title="Judul", summary="s", tags=["a"], scenes=sc), self.facts, self.cfg)
         self.assertEqual(errs, [])
 
