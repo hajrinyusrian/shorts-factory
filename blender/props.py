@@ -1,7 +1,7 @@
 """Procedural, toy-like 3D props. Each builder returns a Prop (root empty + inner animation fn).
 
 Prop keys (Gemini picks one per scene, see pipeline/script_writer.py):
-chip planet rocket battery neural globe bulb shield atom gear
+chip planet rocket battery neural globe bulb shield atom gear money gold house courthouse document car
 """
 import math
 
@@ -341,10 +341,101 @@ def build_gear(tr, pal, pos):
     return Prop(root, inner)
 
 
+
+# ---------------------------------------------------------------------------
+# Documentary / investigative props (reusable across non-technology stories)
+def _case_prop(tr, pos, name):
+    root = empty(f"{name}_root", pos)
+    tr.track(root)
+    return root
+
+
+def build_money(tr, pal, pos):
+    root = _case_prop(tr, pos, "money")
+    paper = _m("cash_paper", hex_rgba("#6F9B78"), rough=0.85, bevel=0.008)
+    band = _m("cash_band", hex_rgba("#F4E7C5"), rough=0.8, bevel=0.004)
+    ink = _m("cash_ink", hex_rgba("#254A38"), rough=0.8, bevel=0)
+    for i in range(3):
+        x = (i - 1) * 0.62
+        rbox(f"cash_stack_{i}", (0.82, 0.48, 0.22), (x, 0, 0), paper, root, radius=0.025)
+        rbox(f"cash_band_{i}", (0.14, 0.50, 0.235), (x, 0, 0.01), band, root, radius=0.008)
+        rbox(f"cash_mark_{i}", (0.20, 0.025, 0.24), (x, -0.245, 0), ink, root, radius=0.003)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.08 * math.sin(t * 0.8)))))
+
+
+def build_gold(tr, pal, pos):
+    root = _case_prop(tr, pos, "gold")
+    gold = _m("gold_bar", hex_rgba("#D9A62E"), rough=0.24, metal=0.82, coat=0.35, bevel=0.02)
+    highlight = _m("gold_stamp", hex_rgba("#FFE7A0"), rough=0.35, metal=0.6, emission=hex_rgba("#FFE7A0"), strength=0.15, bevel=0)
+    for i, (x, y, z) in enumerate([(-0.48, 0, 0), (0.48, 0, 0), (0, 0.02, 0.24)]):
+        bar = rbox(f"gold_ingot_{i}", (0.95, 0.52, 0.22), (x, y, z), gold, root, radius=0.07)
+        bar.rotation_euler[1] = math.radians(-8 if i == 0 else 8 if i == 1 else 0)
+        rbox(f"gold_stamp_{i}", (0.34, 0.025, 0.018), (x, -0.265, z + 0.025), highlight, root, radius=0.006)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.07 * math.sin(t * 0.7)))))
+
+
+def build_house(tr, pal, pos):
+    root = _case_prop(tr, pos, "house")
+    wall = _m("house_wall", hex_rgba("#B8C6D5"), rough=0.82, bevel=0.01)
+    roof = _m("house_roof", hex_rgba(pal["accent"]), rough=0.7, bevel=0.01)
+    dark = _m("house_window", hex_rgba("#19344D"), rough=0.3, emission=hex_rgba("#19344D"), strength=0.2, bevel=0)
+    rbox("house_body", (1.75, 1.25, 1.05), (0, 0, 0.48), wall, root, radius=0.025)
+    left = rbox("house_roof_left", (1.0, 1.48, 0.16), (-0.40, 0, 1.08), roof, root, radius=0.02)
+    right = rbox("house_roof_right", (1.0, 1.48, 0.16), (0.40, 0, 1.08), roof, root, radius=0.02)
+    left.rotation_euler[1] = math.radians(-32)
+    right.rotation_euler[1] = math.radians(32)
+    rbox("house_door", (0.28, 0.04, 0.58), (0, -0.64, 0.25), dark, root, radius=0.01)
+    for x in (-0.52, 0.52):
+        rbox("house_window", (0.30, 0.04, 0.28), (x, -0.64, 0.62), dark, root, radius=0.01)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.04 * math.sin(t * 0.6)))))
+
+
+def build_courthouse(tr, pal, pos):
+    root = _case_prop(tr, pos, "courthouse")
+    stone = _m("court_stone", hex_rgba("#CBD5E1"), rough=0.75, bevel=0.01)
+    gold = _m("court_accent", hex_rgba(pal["accent"]), rough=0.45, metal=0.35, bevel=0.01)
+    rbox("court_base", (2.1, 1.15, 0.18), (0, 0, -0.12), stone, root, radius=0.025)
+    rbox("court_roof", (2.05, 1.0, 0.20), (0, 0, 1.05), stone, root, radius=0.025)
+    for x in (-0.72, -0.24, 0.24, 0.72):
+        cyl("court_column", 0.095, 1.05, (x, -0.25, 0.42), stone, root, bevel=0.012)
+    cone("court_pediment", 1.12, 0.0, 0.58, (0, -0.02, 1.35), gold, root, rot=(math.radians(90), 0, 0), bevel=0.015)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.035 * math.sin(t * 0.55)))))
+
+
+def build_document(tr, pal, pos):
+    root = _case_prop(tr, pos, "document")
+    paper = _m("doc_paper", hex_rgba("#E8EDF2"), rough=0.9, bevel=0.006)
+    line = _m("doc_line", hex_rgba("#61758A"), rough=0.9, bevel=0)
+    stamp = _m("doc_stamp", hex_rgba("#C84B45"), rough=0.6, emission=hex_rgba("#C84B45"), strength=0.15, bevel=0)
+    for i in range(3):
+        sheet = rbox(f"document_sheet_{i}", (1.15, 0.82, 0.035), (0.08 * i, 0.04 * i, 0.035 * i), paper, root, radius=0.008)
+        sheet.rotation_euler[2] = math.radians((i - 1) * 5)
+    for i in range(4):
+        rbox(f"document_text_{i}", (0.68, 0.018, 0.008), (-0.02, -0.25 + i * 0.13, 0.13), line, root, radius=0.002)
+    cyl("document_seal", 0.19, 0.025, (0.42, -0.19, 0.15), stamp, root, rot=(math.radians(90), 0, 0), bevel=0.004)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.05 * math.sin(t * 0.65)))))
+
+
+def build_car(tr, pal, pos):
+    root = _case_prop(tr, pos, "car")
+    body = _m("car_body", hex_rgba("#315A78"), rough=0.3, metal=0.25, coat=0.5, bevel=0.025)
+    glass = _m("car_glass", hex_rgba("#A9D7E8"), rough=0.16, metal=0.1, bevel=0.01)
+    tyre = _m("car_tyre", hex_rgba("#17212B"), rough=0.8, bevel=0.01)
+    rbox("car_chassis", (1.8, 0.86, 0.36), (0, 0, 0.25), body, root, radius=0.10)
+    rbox("car_cabin", (0.92, 0.72, 0.42), (0.08, 0, 0.60), glass, root, radius=0.10)
+    for x in (-0.58, 0.58):
+        for y in (-0.43, 0.43):
+            cyl("car_wheel", 0.22, 0.13, (x, y, 0.12), tyre, root, rot=(math.radians(90), 0, 0), bevel=0.02)
+    return Prop(root, lambda t: setattr(root, "rotation_euler", Euler((0, 0, 0.035 * math.sin(t * 0.5)))))
+
+
+
 BUILDERS = {
     "chip": build_chip, "planet": build_planet, "rocket": build_rocket, "battery": build_battery,
     "neural": build_neural, "globe": build_globe, "bulb": build_bulb, "shield": build_shield,
     "atom": build_atom, "gear": build_gear,
+    "money": build_money, "gold": build_gold, "house": build_house,
+    "courthouse": build_courthouse, "document": build_document, "car": build_car,
 }
 
 
